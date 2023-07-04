@@ -1,0 +1,125 @@
+import pygame
+
+pygame.init()
+screen = pygame.display.set_mode((800, 500))
+pygame.display.set_caption("Super Mario Bros")
+run = True
+
+"""Mario"""
+x = 20
+y = 350
+width = 94
+height = 102
+speed = 10
+mario_kill = False
+isJump = False
+jumpCount = 10
+left = False
+right = False
+jump = False
+sit = False
+animCount = 0
+
+"""Goomba"""
+goomba = [pygame.image.load("goomba.1.png").convert_alpha(), pygame.image.load("images/goomba.2.png").convert_alpha()]
+goomba_x = 600
+goomba_anim_count = 0
+
+clock = pygame.time.Clock()
+
+walkRight = [pygame.image.load("images/right1.png").convert_alpha(), pygame.image.load("images/right2.png").convert_alpha(),
+             pygame.image.load("right3.png").convert_alpha()]
+walkLeft = [pygame.image.load("images/left1.png").convert_alpha(), pygame.image.load("images/left2.png").convert_alpha(),
+            pygame.image.load("left3.png").convert_alpha()]
+playerStand = pygame.image.load("images/idle.mario_right.png").convert_alpha()
+bg = pygame.image.load("bg 1.png").convert_alpha()
+walkJump = [pygame.image.load("images/jump_right.png").convert_alpha()]
+walkSit = [pygame.image.load("images/sit_right.png").convert_alpha()]
+GameOver = pygame.image.load("GameOver.png")
+
+def draw():
+     global animCount
+     if animCount + 1 >= 10:
+         animCount = 0
+     if left:
+         screen.blit(walkLeft[animCount // 5], (x, y))
+         animCount += 1
+     elif right:
+         screen.blit(walkRight[animCount // 5], (x, y))
+         animCount += 1
+     elif jump:
+         screen.blit(walkJump[animCount // 100], (x, y))
+     elif sit:
+         screen.blit(walkSit[animCount // 10], (x, 360))
+     elif mario_kill:
+         screen.blit(GameOver, (270, 100))
+     else:
+         screen.blit(playerStand, (x, y))
+     pygame.display.update()
+def g_draw():
+    global goomba_anim_count
+    global goomba_x
+    screen.blit(goomba[goomba_anim_count // 2], (goomba_x, 400))
+    if goomba_anim_count == 2:
+        goomba_anim_count = 0
+    goomba_anim_count += 1
+    goomba_x -= 2
+while True:
+    clock.tick(60)
+    screen.blit(bg, (0, 0))
+
+    mario_rect = walkLeft[0].get_rect(topleft=(x, y))
+    goomba_rect = goomba[0].get_rect(topleft=(goomba_x, 400))
+    if mario_rect.colliderect(goomba_rect):
+        mario_kill = True
+        y = 700
+        left = False
+        right = False
+        jump = False
+        sit = False
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            run = False
+            pygame.quit()
+
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_LEFT] and x > 5:
+        x -= speed
+        left = True
+        right = False
+        jump = False
+    elif keys[pygame.K_RIGHT] and x < 800 - width - speed:
+        x += speed
+        left = False
+        jump = False
+        right = True
+    elif keys[pygame.K_DOWN]:
+        left = False
+        right = False
+        jump = False
+        sit = True
+    else:
+        left = False
+        right = False
+        sit = False
+        animCount = 0
+    if not isJump and height < 103:
+        if keys[pygame.K_UP]:
+            isJump = True
+            jump = True
+            left = False
+            right = False
+        else:
+            jump = False
+    else:
+        if jumpCount >= -10:
+            if jumpCount < 0:
+                y += (jumpCount ** 2) / 3
+            else:
+                y -= (jumpCount**2)/3
+            jumpCount -= 1
+        else:
+            isJump = False
+            jumpCount = 10
+    g_draw()
+    draw()
